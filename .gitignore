@@ -1,0 +1,16 @@
+*.iml
+.gradle
+.gradle-user*
+.android-user
+/local.properties
+/.idea/
+.DS_Store
+/build
+/out/
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Project exclude paths
+/out/app-build/

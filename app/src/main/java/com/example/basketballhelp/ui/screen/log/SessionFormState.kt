@@ -1,0 +1,72 @@
+package com.example.basketballhelp.ui.screen.log
+
+import com.example.basketballhelp.domain.model.Session
+import com.example.basketballhelp.util.todayIso
+
+data class SessionFormState(
+    val id: Int = 0,
+    val playerId: Int = 1,
+    val sessionDate: String = todayIso(),
+    val durationMinutes: Int = 60,
+    val leftHandControl: Float = 5f,
+    val rightHandControl: Float = 5f,
+    val formShooting: Float = 5f,
+    val guideHand: Float = 5f,
+    val freeThrowsMade: Int = 0,
+    val freeThrowsAttempted: Int = 0,
+    val spotShootingMade: Int = 0,
+    val spotShootingAttempted: Int = 0,
+    val closeRangeMade: Int = 0,
+    val closeRangeAttempted: Int = 0,
+    val stopPopSpeed: Float = 5f,
+    val footwork: Float = 5f,
+    val bigPlayerSkill: Float = 5f,
+    val confidence: Float = 5f,
+    val coachNotes: String = "",
+)
+
+fun SessionFormState.toSession(createdAt: Long, updatedAt: Long): Session = Session(
+    id = id,
+    playerId = playerId,
+    sessionDate = sessionDate,
+    durationMinutes = durationMinutes,
+    leftHandControl = leftHandControl,
+    rightHandControl = rightHandControl,
+    formShooting = formShooting,
+    guideHand = guideHand,
+    freeThrowsMade = freeThrowsMade,
+    freeThrowsAttempted = freeThrowsAttempted,
+    spotShootingMade = spotShootingMade,
+    spotShootingAttempted = spotShootingAttempted,
+    closeRangeMade = closeRangeMade,
+    closeRangeAttempted = closeRangeAttempted,
+    stopPopSpeed = stopPopSpeed,
+    footwork = footwork,
+    bigPlayerSkill = bigPlayerSkill,
+    confidence = confidence,
+    coachNotes = coachNotes.ifBlank { null },
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+)
+
+fun Session.toFormState(): SessionFormState = SessionFormState(
+    id = id,
+    playerId = playerId,
+    sessionDate = sessionDate,
+    durationMinutes = durationMinutes ?: 0,
+    leftHandControl = leftHandControl,
+    rightHandControl = rightHandControl,
+    formShooting = formShooting,
+    guideHand = guideHand,
+    freeThrowsMade = freeThrowsMade,
+    freeThrowsAttempted = freeThrowsAttempted,
+    spotShootingMade = spotShootingMade,
+    spotShootingAttempted = spotShootingAttempted,
+    closeRangeMade = closeRangeMade,
+    closeRangeAttempted = closeRangeAttempted,
+    stopPopSpeed = stopPopSpeed,
+    footwork = footwork,
+    bigPlayerSkill = bigPlayerSkill,
+    confidence = confidence,
+    coachNotes = coachNotes.orEmpty(),
+)
