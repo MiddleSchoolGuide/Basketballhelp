@@ -65,7 +65,17 @@ fun HistoryScreen(
                         Text("Right Hand ${session.rightHandControl}/10")
                         Text("Form ${session.formShooting}/10")
                         Text("Guide Hand ${session.guideHand}/10")
-                        Text("Close Range ${SessionAnalytics.percent(session.closeRangeMade, session.closeRangeAttempted)}%")
+                        Text("Free Throws ${session.freeThrowsMade}/${session.freeThrowsAttempted} (${SessionAnalytics.percent(session.freeThrowsMade, session.freeThrowsAttempted)}%)")
+                        Text("Spot Shooting ${session.spotShootingMade}/${session.spotShootingAttempted} (${SessionAnalytics.percent(session.spotShootingMade, session.spotShootingAttempted)}%)")
+                        Text("Close Range ${session.closeRangeMade}/${session.closeRangeAttempted} (${SessionAnalytics.percent(session.closeRangeMade, session.closeRangeAttempted)}%)")
+                        Text(
+                            "Overall Shooting ${
+                                SessionAnalytics.percent(
+                                    session.freeThrowsMade + session.spotShootingMade + session.closeRangeMade,
+                                    session.freeThrowsAttempted + session.spotShootingAttempted + session.closeRangeAttempted,
+                                )
+                            }%",
+                        )
                         session.coachNotes?.let { Text("Notes: $it") }
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Button(onClick = { onEditSession(session.id) }) { Text("Edit") }

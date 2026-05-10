@@ -1,19 +1,23 @@
 package com.example.basketballhelp.ui.screen.profile
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,18 +32,36 @@ import com.example.basketballhelp.ui.components.StatPill
 fun ProfileScreen(viewModel: ProfileViewModel) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
     val player = state.player
+    val players = state.players
     val sessions = state.sessions
     val goals = state.goals
-    val name = remember(player?.name) { mutableStateOf(player?.name.orEmpty()) }
-    val age = remember(player?.age) { mutableStateOf(player?.age?.toString().orEmpty()) }
-    val position = remember(player?.positionFocus) { mutableStateOf(player?.positionFocus.orEmpty()) }
-    val notes = remember(player?.notes) { mutableStateOf(player?.notes.orEmpty()) }
+    var isCreating by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
+    val name = remember { mutableStateOf("") }
+    val age = remember { mutableStateOf("") }
+    val position = remember { mutableStateOf("") }
+    val notes = remember { mutableStateOf("") }
     val bestScore = sessions.maxOfOrNull(SessionAnalytics::developmentScore) ?: 0
     val totalMinutes = sessions.sumOf { it.durationMinutes ?: 0 }
     val sevenDay = SessionAnalytics.averageForWindow(sessions, 7) { it.leftHandControl }
     val fourteenDay = SessionAnalytics.averageForWindow(sessions, 14) { it.leftHandControl }
     val latest = sessions.firstOrNull()
     val first = sessions.lastOrNull()
+    val canDeleteCurrentPlayer = players.size > 1 && player != null
+
+    LaunchedEffect(player?.id, isCreating) {
+        if (isCreating) {
+            name.value = ""
+            age.value = "13"
+            position.value = "3/4/5"
+            notes.value = ""
+        } else {
+            name.value = player?.name.orEmpty()
+            age.value = player?.age?.toString().orEmpty()
+            position.value = player?.positionFocus.orEmpty()
+            notes.value = player?.notes.orEmpty()
+        }
+    }
 
     ScreenScaffold(title = "Profile") { padding ->
         if (state.isLoading && player == null) {
@@ -57,14 +79,50 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                 }
                 item {
                     SectionCard {
-                        SectionTitle(player?.name ?: "Player")
+                        SectionTitle("Player Roster", "Switch between players or add a new one")
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            players.forEach { rosterPlayer ->
+                                val selected = rosterPlayer.id == player?.id && !isCreating
+                                if (selected) {
+                                    Button(onClick = { }) { Text(rosterPlayer.name) }
+                                } else {
+                                    OutlinedButton(onClick = {
+                                        isCreating = false
+                                        viewModel.selectPlayer(rosterPlayer.id)
+                                    }) { Text(rosterPlayer.name) }
+                                }
+                            }
+                            OutlinedButton(onClick = { isCreating = true }) { Text("New Player") }
+                        }
+                    }
+                }
+                item {
+                    SectionCard {
+                        SectionTitle(if (isCreating) "Create Player" else (player?.name ?: "Player"))
                         OutlinedTextField(value = name.value, onValueChange = { name.value = it }, label = { Text("Name") })
                         OutlinedTextField(value = age.value, onValueChange = { age.value = it }, label = { Text("Age") })
                         OutlinedTextField(value = position.value, onValueChange = { position.value = it }, label = { Text("Position Focus") })
                         OutlinedTextField(value = notes.value, onValueChange = { notes.value = it }, label = { Text("Notes") }, minLines = 3)
-                        Button(onClick = {
-                            viewModel.updatePlayer(name.value, age.value.toIntOrNull() ?: 13, position.value, notes.value)
-                        }) { Text("Save Player") }
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Button(
+                                onClick = {
+                                    if (isCreating) {
+                                        viewModel.createPlayer(name.value, age.value.toIntOrNull() ?: 13, position.value, notes.value)
+                                        isCreating = false
+                                    } else {
+                                        viewModel.updatePlayer(name.value, age.value.toIntOrNull() ?: 13, position.value, notes.value)
+                                    }
+                                },
+                                enabled = !state.isSaving && name.value.isNotBlank(),
+                            ) {
+                                Text(if (isCreating) "Create Player" else "Save Player")
+                            }
+                            if (isCreating) {
+                                OutlinedButton(onClick = { isCreating = false }, enabled = !state.isSaving) { Text("Cancel") }
+                            } else if (canDeleteCurrentPlayer) {
+                                OutlinedButton(onClick = { confirmDelete = true }, enabled = !state.isSaving) { Text("Delete Player") }
+                            }
+                        }
                     }
                 }
                 item {
@@ -107,5 +165,22 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
                 }
             }
         }
+    }
+
+    if (confirmDelete && player != null) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text("Delete player?") },
+            text = { Text("This removes ${player.name} and switches to another roster player if one exists.") },
+            confirmButton = {
+                Button(onClick = {
+                    confirmDelete = false
+                    viewModel.deletePlayer(player.id)
+                }) { Text("Delete") }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { confirmDelete = false }) { Text("Cancel") }
+            },
+        )
     }
 }

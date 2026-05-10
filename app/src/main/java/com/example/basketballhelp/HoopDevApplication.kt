@@ -2,10 +2,12 @@ package com.example.basketballhelp
 
 import android.app.Application
 import com.example.basketballhelp.data.network.service.NetworkModule
+import com.example.basketballhelp.data.repository.AiCoachingRepositoryImpl
 import com.example.basketballhelp.data.repository.DrillRepositoryImpl
 import com.example.basketballhelp.data.repository.GoalRepositoryImpl
 import com.example.basketballhelp.data.repository.PlayerRepositoryImpl
 import com.example.basketballhelp.data.repository.SessionRepositoryImpl
+import com.example.basketballhelp.domain.repository.AiCoachingRepository
 import com.example.basketballhelp.domain.repository.DrillRepository
 import com.example.basketballhelp.domain.repository.GoalRepository
 import com.example.basketballhelp.domain.repository.PlayerRepository
@@ -28,5 +30,9 @@ class HoopDevApplication : Application() {
 
     val drillRepository: DrillRepository by lazy {
         DrillRepositoryImpl(api)
+    }
+
+    val aiCoachingRepository: AiCoachingRepository by lazy {
+        AiCoachingRepositoryImpl(api)
     }
 }

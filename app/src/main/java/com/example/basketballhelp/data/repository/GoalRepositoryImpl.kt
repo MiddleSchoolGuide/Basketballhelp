@@ -17,9 +17,13 @@ class GoalRepositoryImpl(
 
     override fun observeGoals(): Flow<List<Goal>> = goalsFlow.asStateFlow()
 
-    override suspend fun refresh(playerId: Int) {
+    override suspend fun refresh(playerId: Int?) {
         runCatching {
-            goalsFlow.value = api.getGoals(playerId).map { it.toDomain() }
+            goalsFlow.value = if (playerId == null) {
+                emptyList()
+            } else {
+                api.getGoals(playerId).map { it.toDomain() }
+            }
         }.getOrElse { throw it.toApiException() }
     }
 

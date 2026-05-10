@@ -20,9 +20,13 @@ class SessionRepositoryImpl(
 
     override fun observeLatestSession(): Flow<Session?> = sessionsFlow.map { it.maxByOrNull(Session::sessionDate) }
 
-    override suspend fun refresh(playerId: Int, limit: Int?) {
+    override suspend fun refresh(playerId: Int?, limit: Int?) {
         runCatching {
-            sessionsFlow.value = api.getSessions(playerId, limit).map { it.toDomain() }
+            sessionsFlow.value = if (playerId == null) {
+                emptyList()
+            } else {
+                api.getSessions(playerId, limit).map { it.toDomain() }
+            }
         }.getOrElse { throw it.toApiException() }
     }
 

@@ -98,6 +98,31 @@ data class DrillCompletionPayloadDto(
     val sessionId: Int?,
 )
 
+data class AiPracticePlanRequestDto(
+    val playerId: Int,
+)
+
+data class AiPracticePlanDto(
+    val headline: String,
+    val summary: String,
+    val focusAreas: List<AiFocusAreaDto>,
+    val nextSessionPlan: List<AiSessionBlockDto>,
+    val caution: String?,
+)
+
+data class AiFocusAreaDto(
+    val title: String,
+    val reason: String,
+    val adjustment: String,
+)
+
+data class AiSessionBlockDto(
+    val phase: String,
+    val drill: String,
+    val minutes: Int,
+    val target: String,
+)
+
 data class ApiErrorDto(
     val error: String?,
 )

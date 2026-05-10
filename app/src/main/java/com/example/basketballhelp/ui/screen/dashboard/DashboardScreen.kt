@@ -13,11 +13,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.basketballhelp.domain.model.AiPracticePlanResult
 import com.example.basketballhelp.domain.usecase.RecommendationTone
 import com.example.basketballhelp.domain.usecase.SessionAnalytics
 import com.example.basketballhelp.ui.components.BarGroupChart
@@ -33,6 +36,9 @@ import com.example.basketballhelp.ui.theme.Orange500
 import com.example.basketballhelp.ui.theme.Purple400
 import com.example.basketballhelp.ui.theme.Sky400
 import com.example.basketballhelp.util.formatDisplayDate
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun DashboardScreen(viewModel: DashboardViewModel) {
@@ -131,6 +137,92 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
                 }
                 item {
                     SectionCard {
+                        SectionTitle("AI Practice Plan", "Experimental layer on top of the normal coaching rules")
+                        if (sessions.size <= 1) {
+                            Surface(
+                                color = Amber400.copy(alpha = 0.18f),
+                                tonalElevation = 0.dp,
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
+                                    Text("Limited personalization", color = Amber400, style = MaterialTheme.typography.titleSmall)
+                                    Text(
+                                        "Only ${sessions.size} session logged. Add more sessions to give the AI real trends to adjust from.",
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                        }
+                        if (state.aiPracticePlanJustUpdated) {
+                            Surface(
+                                color = Green400.copy(alpha = 0.18f),
+                                tonalElevation = 0.dp,
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
+                                    Text("AI plan updated", color = Green400, style = MaterialTheme.typography.titleSmall)
+                                    Text("Updated just now", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                        if (state.aiPracticePlanRefreshing) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                CircularProgressIndicator()
+                                Text("Refreshing AI plan...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                        state.aiPracticePlanUpdatedAt?.let { updatedAt ->
+                            Text(
+                                "Last generated ${formatAiTimestamp(updatedAt)}",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        when (val aiPlan = state.aiPracticePlan) {
+                            AiPracticePlanResult.Disabled -> {
+                                Text("AI planning is off on the backend. Add the OpenAI key to the server environment to enable it.")
+                            }
+                            AiPracticePlanResult.Loading -> {
+                                if (!state.aiPracticePlanRefreshing) {
+                                    CircularProgressIndicator()
+                                }
+                            }
+                            is AiPracticePlanResult.Error -> {
+                                Text(aiPlan.message, color = MaterialTheme.colorScheme.error)
+                            }
+                            is AiPracticePlanResult.Success -> {
+                                Text(aiPlan.plan.headline, style = MaterialTheme.typography.titleMedium)
+                                Text(aiPlan.plan.summary, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                SectionTitle("Focus Areas")
+                                aiPlan.plan.focusAreas.forEach { focus ->
+                                    ProgressRow(focus.title, "", 1f, Orange500)
+                                    Text(focus.reason)
+                                    Text("Adjustment: ${focus.adjustment}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                SectionTitle("Next Session Blocks")
+                                aiPlan.plan.nextSessionPlan.forEach { block ->
+                                    ProgressRow(block.phase, "${block.minutes} min", (block.minutes / 25f).coerceIn(0f, 1f), Sky400)
+                                    Text("${block.drill} — ${block.target}")
+                                }
+                                aiPlan.plan.caution?.takeIf { it.isNotBlank() }?.let { caution ->
+                                    Text("Caution: $caution", color = Amber400)
+                                }
+                            }
+                        }
+                        OutlinedButton(onClick = viewModel::refreshAiPracticePlan, enabled = !state.aiPracticePlanRefreshing) {
+                            Text(if (state.aiPracticePlanRefreshing) "Regenerating..." else "Regenerate AI Plan")
+                        }
+                    }
+                }
+                item {
+                    SectionCard {
                         SectionTitle("Coach Recommendations")
                         state.recommendations.forEach { card ->
                             val color = when (card.tone) {
@@ -163,4 +255,9 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
             }
         }
     }
+}
+
+private fun formatAiTimestamp(timestamp: Long): String {
+    val formatter = DateTimeFormatter.ofPattern("MMM d, h:mm a")
+    return Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).format(formatter)
 }

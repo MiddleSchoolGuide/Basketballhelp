@@ -54,6 +54,7 @@ fun SessionFormStep(
 private fun SessionInfoStep(form: SessionFormState, onChange: (SessionFormState) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionTitle("Session Info", "Date and workout length")
+        PreviewCard("Active Player", "#${form.playerId}")
         NumberField("Duration Minutes", form.durationMinutes.toString()) {
             onChange(form.copy(durationMinutes = it.toIntOrNull() ?: 0))
         }
@@ -90,6 +91,11 @@ private fun ShootingStep(form: SessionFormState, onChange: (SessionFormState) ->
         NumberField("Close Range Attempted", form.closeRangeAttempted.toString()) { onChange(form.copy(closeRangeAttempted = it.toIntOrNull() ?: 0)) }
         PreviewCard("FT Preview", "${SessionAnalytics.percent(form.freeThrowsMade, form.freeThrowsAttempted)}%")
         PreviewCard("Spot Preview", "${SessionAnalytics.percent(form.spotShootingMade, form.spotShootingAttempted)}%")
+        PreviewCard("Close Preview", "${SessionAnalytics.percent(form.closeRangeMade, form.closeRangeAttempted)}%")
+        PreviewCard(
+            "Overall Preview",
+            "${SessionAnalytics.percent(form.freeThrowsMade + form.spotShootingMade + form.closeRangeMade, form.freeThrowsAttempted + form.spotShootingAttempted + form.closeRangeAttempted)}%",
+        )
     }
 }
 
@@ -122,6 +128,15 @@ private fun NotesStep(form: SessionFormState, onChange: (SessionFormState) -> Un
                 Text("Left Hand: ${form.leftHandControl}/10")
                 Text("FT: ${SessionAnalytics.percent(form.freeThrowsMade, form.freeThrowsAttempted)}%")
                 Text("Spot: ${SessionAnalytics.percent(form.spotShootingMade, form.spotShootingAttempted)}%")
+                Text("Close: ${SessionAnalytics.percent(form.closeRangeMade, form.closeRangeAttempted)}%")
+                Text(
+                    "Overall: ${
+                        SessionAnalytics.percent(
+                            form.freeThrowsMade + form.spotShootingMade + form.closeRangeMade,
+                            form.freeThrowsAttempted + form.spotShootingAttempted + form.closeRangeAttempted,
+                        )
+                    }%",
+                )
             }
         }
     }

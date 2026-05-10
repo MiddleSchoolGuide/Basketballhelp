@@ -1,5 +1,6 @@
 package com.example.basketballhelp.data.network.util
 
+import com.example.basketballhelp.data.network.dto.AiPracticePlanDto
 import com.example.basketballhelp.data.network.dto.DrillChecklistItemDto
 import com.example.basketballhelp.data.network.dto.GoalPayloadDto
 import com.example.basketballhelp.data.network.dto.PlayerDto
@@ -7,6 +8,9 @@ import com.example.basketballhelp.data.network.dto.PlayerPayloadDto
 import com.example.basketballhelp.data.network.dto.GoalDto
 import com.example.basketballhelp.data.network.dto.SessionDto
 import com.example.basketballhelp.data.network.dto.SessionPayloadDto
+import com.example.basketballhelp.domain.model.AiFocusArea
+import com.example.basketballhelp.domain.model.AiPracticePlan
+import com.example.basketballhelp.domain.model.AiSessionBlock
 import com.example.basketballhelp.domain.model.DrillChecklistItem
 import com.example.basketballhelp.domain.model.DrillWithCompletion
 import com.example.basketballhelp.domain.model.Goal
@@ -117,6 +121,14 @@ fun Goal.toPayload(): GoalPayloadDto = GoalPayloadDto(
     baselineValue = baselineValue,
     targetValue = targetValue,
     targetDate = targetDate,
+)
+
+fun AiPracticePlanDto.toDomain(): AiPracticePlan = AiPracticePlan(
+    headline = headline,
+    summary = summary,
+    focusAreas = focusAreas.map { AiFocusArea(it.title, it.reason, it.adjustment) },
+    nextSessionPlan = nextSessionPlan.map { AiSessionBlock(it.phase, it.drill, it.minutes, it.target) },
+    caution = caution,
 )
 
 private fun String.toEpochMillis(): Long {

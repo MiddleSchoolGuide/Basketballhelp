@@ -20,6 +20,7 @@ data class HistoryUiState(
 )
 
 class HistoryViewModel(
+    private val playerRepository: com.example.basketballhelp.domain.repository.PlayerRepository,
     private val sessionRepository: SessionRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HistoryUiState())
@@ -41,7 +42,10 @@ class HistoryViewModel(
     fun refresh() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            runCatching { sessionRepository.refresh(1) }
+            runCatching {
+                playerRepository.refresh()
+                sessionRepository.refresh(playerRepository.getCurrentPlayer()?.id)
+            }
                 .onSuccess { _uiState.update { it.copy(isLoading = false, error = null) } }
                 .onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
         }

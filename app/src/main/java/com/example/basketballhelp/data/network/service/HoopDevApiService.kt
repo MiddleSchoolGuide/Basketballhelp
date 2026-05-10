@@ -1,5 +1,7 @@
 package com.example.basketballhelp.data.network.service
 
+import com.example.basketballhelp.data.network.dto.AiPracticePlanDto
+import com.example.basketballhelp.data.network.dto.AiPracticePlanRequestDto
 import com.example.basketballhelp.data.network.dto.DrillChecklistItemDto
 import com.example.basketballhelp.data.network.dto.DrillCompletionPayloadDto
 import com.example.basketballhelp.data.network.dto.GoalDto
@@ -50,6 +52,9 @@ interface HoopDevApiService {
     @POST("api/drills")
     suspend fun saveDrillCompletion(@Body body: DrillCompletionPayloadDto)
 
+    @POST("api/ai/practice-plan")
+    suspend fun generateAiPracticePlan(@Body body: AiPracticePlanRequestDto): AiPracticePlanDto
+
     @GET("api/players")
     suspend fun getPlayers(): List<PlayerDto>
 
@@ -64,4 +69,7 @@ interface HoopDevApiService {
         @Path("id") id: Int,
         @Body body: PlayerPayloadDto,
     ): PlayerDto
+
+    @DELETE("api/players/{id}")
+    suspend fun deletePlayer(@Path("id") id: Int)
 }

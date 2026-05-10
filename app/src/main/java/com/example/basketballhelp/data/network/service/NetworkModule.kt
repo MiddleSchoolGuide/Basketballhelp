@@ -8,17 +8,19 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object NetworkModule {
-    fun createApiService(): HoopDevApiService {
+    private fun baseClientBuilder(): OkHttpClient.Builder {
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
-
-        val client = OkHttpClient.Builder()
+        return OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
             .writeTimeout(20, TimeUnit.SECONDS)
             .addInterceptor(logging)
-            .build()
+    }
+
+    fun createApiService(): HoopDevApiService {
+        val client = baseClientBuilder().build()
 
         return Retrofit.Builder()
             .baseUrl(BuildConfig.BASE_URL)

@@ -29,7 +29,8 @@ class LogSessionViewModel(
     init {
         viewModelScope.launch {
             runCatching {
-                playerRepository.getPlayer()
+                playerRepository.refresh()
+                playerRepository.getCurrentPlayer()
             }.onSuccess { player ->
                 player?.let {
                     _uiState.update { state -> state.copy(form = state.form.copy(playerId = it.id)) }
